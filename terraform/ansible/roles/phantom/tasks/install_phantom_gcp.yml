@@ -1,0 +1,114 @@
+---
+# Install Phantom from RPM on a fresh CentOS 7 instance
+
+- name: Change mirror to vault.centos.org
+  shell: sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo
+  become: yes
+
+- name: Uncomment baseurl lines
+  shell: sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo
+  become: yes
+
+- name: Comment out mirrorlist lines
+  shell: sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+  become: yes
+
+- name: Update all packages
+  become: yes
+  become_user: root
+  yum:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+# # Ensure ~/.ssh directory exists
+# - name: Ensure .ssh directory exists
+#   file:
+#     path: /root/.ssh
+#     state: directory
+#     mode: '0700'
+#     owner: root
+#     group: root
+#   become: yes
+#   become_user: root
+
+# # Ensure ~/.ssh/authorized_keys file exists
+# - name: Ensure authorized_keys file exists
+#   file:
+#     path: /root/.ssh/authorized_keys
+#     state: touch
+#     mode: '0600'
+#     owner: root
+#     group: root
+#   become: yes
+#   become_user: root
+
+# Check if the bundled Python 3 path exists
+- name: Validate Python 3 path
+  stat:
+    path: /usr/lib64/google-cloud-sdk/platform/bundledpythonunix/bin/python3
+  register: python_path_check
+  when: ansible_os_family == "RedHat"
+
+- name: Fail if Python 3 path is missing
+  fail:
+    msg: "The required Python 3 path '/usr/lib64/google-cloud-sdk/platform/bundledpythonunix/bin/python3' does not exist. Please verify the installation."
+  when: ansible_os_family == "RedHat" and not python_path_check.stat.exists
+
+# Ensure Python 3 is installed if path is missing
+- name: Install Google Cloud SDK bundled Python 3
+  become: yes
+  become_user: root
+  yum:
+    name: google-cloud-sdk-bundled-python3.x86_64
+    state: present
+  when: ansible_os_family == "RedHat" and not python_path_check.stat.exists
+
+# Ensure /usr/bin/python3 symlink exists
+- name: Create symlink for Python 3
+  become: yes
+  become_user: root
+  command:
+    cmd: "ln -sf /usr/lib64/google-cloud-sdk/platform/bundledpythonunix/bin/python3 /usr/bin/python3"
+    creates: /usr/bin/python3
+  when: ansible_os_family == "RedHat" and python_path_check.stat.exists
+
+# Additional tasks to set up Phantom (unchanged from previous steps)
+- name: Copy Splunk SOAR to server
+  become: yes
+  become_user: root
+  unarchive:
+    src: "../../apps/{{ phantom_server.phantom_app }}"
+    dest: /home/aruser
+    owner: aruser
+    group: aruser
+
+- name: Creates directory
+  become: yes
+  become_user: root
+  file:
+    path: /opt/soar
+    state: directory
+    owner: aruser
+    group: aruser
+
+- name: prepare phantom install script without apps
+  become: yes
+  command: /home/aruser/splunk-soar/soar-prepare-system --splunk-soar-home /opt/soar --no-prompt 
+
+- name: copy splunk soar folder
+  become: yes
+  become_user: root
+  command: cp -r /home/aruser/splunk-soar /home/phantom/splunk-soar
+
+- name: chown splunk soar folder
+  become: yes
+  become_user: root
+  command: chown -R phantom:phantom /home/phantom/splunk-soar
+
+- name: run the phantom install script 
+  become: yes
+  become_user: phantom
+  command: ./soar-install --splunk-soar-home /opt/soar --no-prompt --ignore-warnings
+  args:
+    chdir: /home/phantom/splunk-soar

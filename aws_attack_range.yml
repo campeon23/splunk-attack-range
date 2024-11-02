@@ -1,0 +1,32 @@
+general:
+  cloud_provider: aws
+  attack_range_password: M3hYTqTmj3nI5XEBi0g
+  key_name: campeon-55513
+  ip_whitelist: 0.0.0.0/0
+  attack_range_name: cna-ar
+aws:
+  private_key_path: /Users/campeon/Documents/workspaces/clones/security/splunk_attack_range/campeon-55513.key
+  region: us-east-1
+windows_servers:
+- hostname: ar-win-dc
+  windows_image: windows-server-2016
+  create_domain: '1'
+  install_red_team_tools: '1'
+  bad_blood: '1'
+- hostname: ar-win-2
+  windows_image: windows-server-2019
+  join_domain: '1'
+  install_red_team_tools: '1'
+linux_servers:
+- hostname: ar-linux
+kali_server:
+  kali_server: '1'
+nginx_server:
+  nginx_server: '1'
+zeek_server:
+  zeek_server: '1'
+snort_server:
+  snort_server: '1'
+phantom_server:
+  phantom_server: '1'
+  phantom_app: splunk_soar-unpriv-6.3.0.719-d9df3cc1-el8-x86_64.tgz
