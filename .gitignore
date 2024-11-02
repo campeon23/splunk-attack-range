@@ -5,8 +5,14 @@ terraform/ansible/vars/*.json
 vagrant/*vars.json
 scripts/apps/*.tgz
 
-#keys
+# keys
 *.key
+*.pem
+*.csr
+*.pub
+
+# terraform variable files
+*.tfvars
 
 # ignore appbinaries directory we don't want this uploaded
 ansible/roles/*/files/splunk*.tgz
@@ -14,6 +20,11 @@ ansible/roles/*/files/splunk*.msi
 ansible/vars/vars.yml
 *.idea
 *.hcl
+
+# backups
+*.bak
+*.backup
+*.old
 
 # apps folder
 apps/*
@@ -70,6 +81,7 @@ override.tf.json
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
 #
+plan_output
 
 # dont want entire box files
 # # Vagrant stuff
@@ -124,6 +136,9 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Audit logs
+audit
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -172,7 +187,7 @@ celerybeat-schedule
 
 # Environments
 .env
-.venv
+.venv*
 env/
 venv/
 ENV/
