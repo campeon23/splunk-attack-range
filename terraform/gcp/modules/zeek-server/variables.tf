@@ -8,6 +8,12 @@ variable "vpc_network" { }
 
 variable "subnetwork" { }
 
+variable "service_accounts" { }
+
+variable "zeek_sa_email" { }
+
+variable "zeek_sa_roles" { }
+
 variable "snort_server" { }
 
 variable "zeek_server" { }

@@ -4,6 +4,7 @@
 # configured with a custom image, machine type, and disk specifications.
 # -----------------------------------------------------------------------------
 
+# Linux Server Instance Configuration
 resource "google_compute_instance" "linux_server" {
   # Define instance count based on the number of entries in the linux_servers variable
   count        = length(var.linux_servers)
@@ -31,6 +32,12 @@ resource "google_compute_instance" "linux_server" {
       nat_ip = length(google_compute_address.linux_server_ip) > count.index ? google_compute_address.linux_server_ip[count.index].address : null
     }
   }
+
+  # Assign the Linux Service Account to this instance
+    service_account {
+        email  = var.linux_sa_email
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
 
   # SSH Key Metadata Configuration
   # Add SSH keys for instance access

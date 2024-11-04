@@ -6,6 +6,7 @@
 # to set up essential configurations for attack-range simulations.
 # -----------------------------------------------------------------------------
 
+# Windows Server Instance Configuration
 resource "google_compute_instance" "windows_server" {
   count        = length(var.windows_servers)
   name         = "ar-win-${var.general.key_name}-${var.general.attack_range_name}-${count.index}"
@@ -31,6 +32,12 @@ resource "google_compute_instance" "windows_server" {
       nat_ip = length(google_compute_address.windows_ip) > count.index ? google_compute_address.windows_ip[count.index].address : null
     }
   }
+
+  # Assign the Windows Service Account to this instance
+    service_account {
+        email  = var.windows_sa_email
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
 
   # Metadata for Windows Startup Script
   # This script configures WinRM, firewall rules, and enables the Administrator account.

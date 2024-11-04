@@ -51,43 +51,125 @@ variable "cidrs" {
   }
 }
 
+# Variable to define a map of service accounts and their associated roles.
+# This variable expects a map where each key represents a service account's name (e.g., "splunk"),
+# and each value is an object specifying the service account's ID and list of IAM roles to assign.
+
+variable "service_accounts" {
+  description = "Map of service accounts with their account IDs and assigned roles."
+  type = map(object({
+    # The unique identifier for the service account, used for creation and role assignment.
+    account_id = string
+    
+    # A list of IAM roles to be assigned to the service account. 
+    # These roles enable necessary permissions for each service account based on its purpose.
+    roles = list(string)
+  }))
+
+  default = {
+    # Service account configuration for "splunk" with its unique ID and required IAM roles.
+    splunk = {
+      account_id = "splunk-sa"
+      roles      = ["roles/compute.viewer", "roles/logging.logWriter"]
+    },
+    
+    # Service account configuration for "phantom" with assigned roles for compute viewing and logging.
+    phantom = {
+      account_id = "phantom-sa"
+      roles      = ["roles/compute.viewer", "roles/logging.logWriter"]
+    },
+    
+    # Service account "nginx" requires additional roles for storage and network viewing, 
+    # along with compute viewing and logging.
+    nginx = {
+      account_id = "nginx-sa"
+      roles      = [
+        "roles/compute.viewer",
+        "roles/logging.logWriter",
+        "roles/storage.objectViewer",
+        "roles/compute.networkViewer"
+      ]
+    },
+    
+    # Minimal IAM roles assigned for basic compute viewing and logging for "kali" service account.
+    kali = {
+      account_id = "kali-sa"
+      roles      = ["roles/compute.viewer", "roles/logging.logWriter"]
+    },
+    
+    # "linux" service account configuration for compute viewing and logging permissions.
+    linux = {
+      account_id = "linux-sa"
+      roles      = ["roles/compute.viewer", "roles/logging.logWriter"]
+    },
+    
+    # IAM roles for the "windows" service account, allowing compute viewing and log writing.
+    windows = {
+      account_id = "windows-sa"
+      roles      = ["roles/compute.viewer", "roles/logging.logWriter"]
+    },
+    
+    # The "snort" service account requires additional permissions for object and network viewing.
+    snort = {
+      account_id = "snort-sa"
+      roles      = [
+        "roles/compute.viewer",
+        "roles/logging.logWriter",
+        "roles/storage.objectViewer",
+        "roles/compute.networkViewer"
+      ]
+    },
+    
+    # Configuration for "zeek" service account with multiple roles, including storage and network access.
+    zeek = {
+      account_id = "zeek-sa"
+      roles      = [
+        "roles/compute.viewer",
+        "roles/logging.logWriter",
+        "roles/storage.objectViewer",
+        "roles/compute.networkViewer"
+      ]
+    }
+  }
+}
+
 # Splunk server instance configuration settings
 variable "splunk_server" {
   description = "Configuration for the Splunk server instance"
   type = object({
-    hostname          = string # Hostname for the server instance
-    machine_type      = string # Machine type, e.g., "e2-standard-4"
-    image             = string # Image, e.g., "ubuntu-2204-lts"
-    disk_size         = number # Disk size in GB
-    disk_type         = string # Disk type, e.g., "pd-standard"
-    install_es        = string # "1" to install Splunk Enterprise Security, "0" otherwise
-    byo_splunk        = string # "1" for BYO Splunk, "0" otherwise
-    splunk_es_app     = string # Splunk Enterprise Security app to install
-    network_ip        = string # Static internal IP
-    byo_splunk_ip     = string # BYO Splunk IP, if applicable
-    splunk_url        = string # Splunk installation URL
-    splunk_uf_url     = string # Splunk Universal Forwarder URL for Linux
-    splunk_uf_win_url = string # Splunk Universal Forwarder URL for Windows
-    s3_bucket_url     = string # URL for S3 bucket containing Splunk apps
-    splunk_apps       = string # Comma-separated list of Splunk apps to install
+    hostname                = string # Hostname for the server instance
+    machine_type            = string # Machine type, e.g., "e2-standard-4"
+    image                   = string # Image, e.g., "ubuntu-2204-lts"
+    disk_size               = number # Disk size in GB
+    disk_type               = string # Disk type, e.g., "pd-standard"
+    install_es              = string # "1" to install Splunk Enterprise Security, "0" otherwise
+    byo_splunk              = string # "1" for BYO Splunk, "0" otherwise
+    splunk_es_app           = string # Splunk Enterprise Security app to install
+    network_ip              = string # Static internal IP
+    byo_splunk_ip           = string # BYO Splunk IP, if applicable
+    splunk_url              = string # Splunk installation URL
+    splunk_uf_url           = string # Splunk Universal Forwarder URL for Linux
+    splunk_uf_win_url       = string # Splunk Universal Forwarder URL for Windows
+    s3_bucket_url           = string # URL for S3 bucket containing Splunk apps
+    splunk_apps             = string # Comma-separated list of Splunk apps to install
   })
 
   default = {
-    hostname          = "splunk"
-    machine_type      = "e2-standard-4"
-    image             = "ubuntu-2204-lts"
-    disk_type         = "pd-standard"
-    disk_size         = 120
-    install_es        = "1"
-    byo_splunk        = "1"
-    splunk_es_app     = "splunk-enterprise-security_701.spl"
-    network_ip        = "10.0.2.220"
-    byo_splunk_ip     = ""
-    splunk_url        = "https://download.splunk.com/products/splunk/releases/9.3.0/linux/splunk-9.3.0-51ccf43db5bd-Linux-x86_64.tgz"
-    splunk_uf_url     = "https://download.splunk.com/products/universalforwarder/releases/9.3.0/linux/splunkforwarder-9.3.0-51ccf43db5bd-linux-2.6-amd64.deb"
-    splunk_uf_win_url = "https://download.splunk.com/products/universalforwarder/releases/9.3.0/windows/splunkforwarder-9.3.0-51ccf43db5bd-x64-release.msi"
-    s3_bucket_url     = "https://attack-range-appbinaries.s3-us-west-2.amazonaws.com"
-    splunk_apps       = "TA-aurora-0.2.0.tar.gz,TA-osquery.tar.gz,app-for-circleci_011.tgz,..."
+    hostname                = "splunk"
+    machine_type            = "e2-standard-4"
+    image                   = "ubuntu-2204-lts"
+    disk_type               = "pd-standard"
+    disk_size               = 120
+    install_es              = "1"
+    byo_splunk              = "1"
+    splunk_es_app           = "splunk-enterprise-security_701.spl"
+    network_ip              = "10.0.2.220"
+    byo_splunk_ip           = ""
+    splunk_url              = "https://download.splunk.com/products/splunk/releases/9.3.0/linux/splunk-9.3.0-51ccf43db5bd-Linux-x86_64.tgz"
+    splunk_uf_url           = "https://download.splunk.com/products/universalforwarder/releases/9.3.0/linux/splunkforwarder-9.3.0-51ccf43db5bd-linux-2.6-amd64.deb"
+    splunk_uf_win_url       = "https://download.splunk.com/products/universalforwarder/releases/9.3.0/windows/splunkforwarder-9.3.0-51ccf43db5bd-x64-release.msi"
+    s3_bucket_url           = "https://attack-range-appbinaries.s3-us-west-2.amazonaws.com"
+    splunk_apps             = "TA-aurora-0.2.0.tar.gz,TA-osquery.tar.gz,app-for-circleci_011.tgz,..."
   }
 }
 
@@ -95,25 +177,25 @@ variable "splunk_server" {
 variable "phantom_server" {
   description = "Phantom server configuration"
   type = object({
-    phantom_server = number # "1" if enabled, "0" otherwise
-    hostname       = string # Phantom server hostname
-    machine_type   = string # Machine type, e.g., "e2-standard-4"
-    image          = string # Image, e.g., "centos-cloud/centos-7"
-    disk_size      = number # Disk size in GB
-    disk_type      = string # Disk type, e.g., "pd-standard"
-    network_ip     = string # Internal IP for the instance
-    phantom_app    = string # Name of the Phantom application to install
+    phantom_server          = number # "1" if enabled, "0" otherwise
+    hostname                = string # Phantom server hostname
+    machine_type            = string # Machine type, e.g., "e2-standard-4"
+    image                   = string # Image, e.g., "centos-cloud/centos-7"
+    disk_size               = number # Disk size in GB
+    disk_type               = string # Disk type, e.g., "pd-standard"
+    network_ip              = string # Internal IP for the instance
+    phantom_app             = string # Name of the Phantom application to install
   })
 
   default = {
-    phantom_server = "1"
-    hostname       = "phantom"
-    machine_type   = "e2-standard-4"
-    image          = "centos-cloud/centos-7"
-    disk_type      = "pd-standard"
-    disk_size      = 30
-    network_ip     = "10.0.2.5"
-    phantom_app    = "splunk_soar-unpriv-6.3.0.719-d9df3cc1-el8-x86_64.tgz"
+    phantom_server          = "1"
+    hostname                = "phantom"
+    machine_type            = "e2-standard-4"
+    image                   = "centos-cloud/centos-7"
+    disk_type               = "pd-standard"
+    disk_size               = 30
+    network_ip              = "10.0.2.5"
+    phantom_app             = "splunk_soar-unpriv-6.3.0.719-d9df3cc1-el8-x86_64.tgz"
   }
 }
 
@@ -121,27 +203,27 @@ variable "phantom_server" {
 variable "nginx_server" {
   description = "Nginx server configuration"
   type = object({
-    nginx_server      = number # "1" if enabled, "0" otherwise
-    hostname          = string # Hostname for NGINX server
-    machine_type      = string # Machine type, e.g., "e2-small"
-    image             = string # Image, e.g., "ubuntu-2204-lts"
-    disk_size         = number # Disk size in GB
-    disk_type         = string # Disk type, e.g., "pd-standard"
-    network_ip        = string # Static internal IP
-    proxy_server_ip   = string # IP of proxy server, if applicable
-    proxy_server_port = string # Port for proxy server, if applicable
+    nginx_server           = number # "1" if enabled, "0" otherwise
+    hostname               = string # Hostname for NGINX server
+    machine_type           = string # Machine type, e.g., "e2-small"
+    image                  = string # Image, e.g., "ubuntu-2204-lts"
+    disk_size              = number # Disk size in GB
+    disk_type              = string # Disk type, e.g., "pd-standard"
+    network_ip             = string # Static internal IP
+    proxy_server_ip        = string # IP of proxy server, if applicable
+    proxy_server_port      = string # Port for proxy server, if applicable
   })
 
   default = {
-    nginx_server      = "1"
-    hostname          = "nginx"
-    machine_type      = "e2-small"
-    image             = "ubuntu-2204-lts"
-    disk_type         = "pd-standard"
-    disk_size         = 20
-    network_ip        = "10.0.2.31"
-    proxy_server_ip   = "10.0.2.254"
-    proxy_server_port = "8000"
+    nginx_server            = "1"
+    hostname                = "nginx"
+    machine_type            = "e2-small"
+    image                   = "ubuntu-2204-lts"
+    disk_type               = "pd-standard"
+    disk_size               = 20
+    network_ip              = "10.0.2.31"
+    proxy_server_ip         = "10.0.2.254"
+    proxy_server_port       = "8000"
   }
 }
 
@@ -149,23 +231,23 @@ variable "nginx_server" {
 variable "kali_server" {
   description = "Kali Linux server configuration"
   type = object({
-    kali_server   = number # "1" if enabled, "0" otherwise
-    hostname      = string # Hostname for Kali Linux server
-    machine_type  = string # Machine type, e.g., "e2-standard-2"
-    image         = string # Image, e.g., "kali-linux-image"
-    disk_size     = number # Disk size in GB
-    disk_type     = string # Disk type, e.g., "pd-ssd"
-    network_ip    = string # Static internal IP
+    kali_server             = number # "1" if enabled, "0" otherwise
+    hostname                = string # Hostname for Kali Linux server
+    machine_type            = string # Machine type, e.g., "e2-standard-2"
+    image                   = string # Image, e.g., "kali-linux-image"
+    disk_size               = number # Disk size in GB
+    disk_type               = string # Disk type, e.g., "pd-ssd"
+    network_ip              = string # Static internal IP
   })
 
   default = {
-    kali_server   = 1
-    hostname      = "kali"
-    machine_type  = "e2-standard-2"
-    image         = "kali-linux-image"
-    disk_size     = 30
-    disk_type     = "pd-ssd"
-    network_ip    = "10.0.2.30"
+    kali_server             = "1"
+    hostname                = "kali"
+    machine_type            = "e2-standard-2"
+    image                   = "kali-linux-image"
+    disk_size               = 30
+    disk_type               = "pd-ssd"
+    network_ip              = "10.0.2.30"
   }
 }
 

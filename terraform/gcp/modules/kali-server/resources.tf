@@ -5,6 +5,8 @@
 # -----------------------------------------------------------------------------
 # Kali Linux Instance Configuration
 # -----------------------------------------------------------------------------
+
+# Kali Linux instance configuration in GCP
 resource "google_compute_instance" "kali_machine" {
   # Instance is created only if 'kali_server' variable is set to 1
   count        = var.kali_server.kali_server == 1 ? 1 : 0
@@ -30,6 +32,12 @@ resource "google_compute_instance" "kali_machine" {
     access_config {                                    # Attach an external IP if required
       nat_ip = length(google_compute_address.kali_ip) > count.index ? google_compute_address.kali_ip[count.index].address : null
     }
+  }
+
+  # Assign the service account to the instance
+  service_account {
+    email  = var.kali_sa_email
+    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
   # SSH configuration for secure access

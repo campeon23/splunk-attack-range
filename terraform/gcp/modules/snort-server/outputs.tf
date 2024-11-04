@@ -6,21 +6,39 @@
 # attributes of the Snort instance and related GCP resources.
 # --------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# These outputs can be used for verification or additional configuration steps.
+# -----------------------------------------------------------------------------
+
+# Output: Snort Service Account Email
+# Provides the email address of the Snort Service Account, if created
+output "snort_sa_email" {
+  description = "The email address of the Snort Service Account"
+  value       = var.snort_sa_email
+}
+
+# Output: snort Server Roles
+# Lists the roles assigned to the Snort Service Account, if created
+output "snort_sa_roles" {
+  description = "Roles assigned to the Snort Service Account"
+  value       = var.snort_sa_roles
+}
+
 # Output: Snort Server Instance Name
 output "snort_server_name" {
-  description = "The name of the Snort server instance"
+  description = "The name of the Snort Server Instance"
   value       = google_compute_instance.snort_sensor[*].name
 }
 
 # Output: Snort Server Internal IP Address
 output "snort_server_internal_ip" {
-  description = "The internal IP address of the Snort server instance"
+  description = "The internal IP address of the Snort Server Instance"
   value       = google_compute_instance.snort_sensor[*].network_interface[0].network_ip
 }
 
 # Output: Snort Server External IP Address
 output "snort_server_external_ip" {
-  description = "The external IP address of the Snort server instance, if assigned"
+  description = "The external IP address of the Snort Server Instance, if assigned"
   value       = google_compute_instance.snort_sensor[*].network_interface[0].access_config[0].nat_ip
 }
 

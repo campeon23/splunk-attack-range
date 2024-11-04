@@ -9,7 +9,7 @@
 resource "google_compute_instance" "snort_sensor" {
   count        = var.snort_server.snort_server == 1 ? 1 : 0
   name         = "ar-snort-${var.general.key_name}-${var.general.attack_range_name}"
-  machine_type = var.snort_server.machine_type  # Equivalent to AWS "m5.2xlarge" for performance needs
+  machine_type = var.snort_server.machine_type            # Equivalent to AWS "m5.2xlarge" for performance needs
   zone         = var.gcp.zone
 
   # Boot disk configuration for the Snort instance
@@ -32,6 +32,12 @@ resource "google_compute_instance" "snort_sensor" {
       # Assign a public IP if required; otherwise, set to null
       nat_ip = length(google_compute_address.snort_ip) > count.index ? google_compute_address.snort_ip[count.index].address : null
     }
+  }
+
+  # Assign the Snort Service Account to this instance
+  service_account {
+    email  = var.snort_sa_email
+    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
   }
 
   # SSH key metadata for user access
