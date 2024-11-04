@@ -8,27 +8,45 @@
 # Terraform console and other automated processes.
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# These outputs can be used for verification or additional configuration steps.
+# -----------------------------------------------------------------------------
+
+# Output: Zeek Service Account Email
+# Provides the email address of the Zeek Service Account, if created
+output "zeek_sa_email" {
+  description = "The email address of the Zeek Service Account"
+  value       = var.zeek_sa_email
+}
+
+# Output: Zeek Server Roles
+# Lists the roles assigned to the Zeek Service Account, if created
+output "zeek_sa_roles" {
+  description = "Roles assigned to the Zeek Service Account"
+  value       = var.zeek_sa_roles
+}
+
 # Output: Zeek Server Instance Name
 output "zeek_server_name" {
-  description = "The name of the Zeek server instance"
+  description = "The name of the Zeek Server Instance"
   value       = google_compute_instance.zeek_sensor[*].name
 }
 
 # Output: Zeek Server Internal IP
 output "zeek_server_internal_ip" {
-  description = "The internal IP address of the Zeek server instance"
+  description = "The internal IP address of the Zeek Server Instance"
   value       = google_compute_instance.zeek_sensor[*].network_interface[0].network_ip
 }
 
 # Output: Zeek Server External IP
 output "zeek_server_external_ip" {
-  description = "The external IP address of the Zeek server instance, if assigned"
+  description = "The external IP address of the Zeek Server Instance, if assigned"
   value       = google_compute_instance.zeek_sensor[*].network_interface[0].access_config[0].nat_ip
 }
 
 # Output: Zeek Server Self-Link
 output "zeek_server_self_link" {
-  description = "The self-link of the Zeek server instance"
+  description = "The self-link of the Zeek Server Instance"
   value       = google_compute_instance.zeek_sensor[*].self_link
 }
 

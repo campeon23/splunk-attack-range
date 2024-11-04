@@ -1,130 +1,162 @@
+# Load network module to set up the VPC network and associated resources.
 module "networkModule" {
-  source               = "./modules/network"
-  general              = var.general
-  gcp                  = var.gcp
-  cidrs                = var.cidrs
+  source  = "./modules/network"
+  general = var.general                   # General project variables
+  gcp     = var.gcp                       # GCP-specific project settings
+  cidrs   = var.cidrs                     # CIDR blocks for network subnets
 }
 
+# IAM module to create and manage service accounts with appropriate roles.
+module "iam" {
+  source            = "./modules/iam"
+  general           = var.general
+  gcp               = var.gcp
+  service_accounts  = var.service_accounts
+}
+# Splunk Server module to deploy and configure Splunk server on GCP.
 module "splunk_server" {
-  source               = "./modules/splunk-server"
-  
-  # Pass the VPC network and subnet from the GCP network module
-  vpc_network          = module.networkModule.vpc_network_id
-  subnetwork           = module.networkModule.vpc_public_subnet_id  # Using the public subnet for public access
+  source = "./modules/splunk-server"
+  vpc_network = module.networkModule.vpc_network_id
+  subnetwork = module.networkModule.vpc_public_subnet_id
 
-  # Pass in GCP-specific configurations
-  gcp                  = var.gcp
-  general              = var.general
+  # General configuration
+  gcp = var.gcp
+  general = var.general
+  service_accounts = var.service_accounts
+  splunk_sa_email = module.iam.service_account_emails["splunk"]
+  splunk_sa_roles = module.iam.assigned_roles["splunk"]
 
-  # Module-specific variables
-  splunk_server        = var.splunk_server
-  phantom_server       = var.phantom_server
-  kali_server          = var.kali_server
-  snort_server         = var.snort_server
-  zeek_server          = var.zeek_server
-  windows_servers      = var.windows_servers
-  linux_servers        = var.linux_servers
-
-  simulation           = var.simulation
+  # Server instances and dependencies
+  splunk_server = var.splunk_server
+  phantom_server = var.phantom_server
+  kali_server = var.kali_server
+  snort_server = var.snort_server
+  zeek_server = var.zeek_server
+  windows_servers = var.windows_servers
+  linux_servers = var.linux_servers
+  simulation = var.simulation
 }
 
+# Phantom Server module to deploy Phantom server and configure network/security settings.
 module "phantom-server" {
   source               = "./modules/phantom-server"
 
   # Network configuration (GCP equivalent of VPC and subnet IDs)
-  vpc_network          = module.networkModule.vpc_network_id        # GCP's equivalent of `vpc_security_group_ids` for network
-  subnetwork           = module.networkModule.vpc_public_subnet_id  # GCP's equivalent of `ec2_subnet_id` for subnet
+  vpc_network          = module.networkModule.vpc_network_id        
+  subnetwork           = module.networkModule.vpc_public_subnet_id  
   cidrs                = var.cidrs
 
   # General configuration
-  general              = var.general                                # General configuration variables
-  gcp                  = var.gcp                                    # GCP-specific settings like zone and SSH keys
+  general              = var.general                                
+  gcp                  = var.gcp                                    
+  service_accounts     = var.service_accounts
+  phantom_sa_email     = module.iam.service_account_emails["phantom"]
+  phantom_sa_roles     = module.iam.assigned_roles["phantom"]
 
   # Server instances and dependencies
-  splunk_server        = var.splunk_server                          # Splunk server info for Ansible if needed
-  phantom_server       = var.phantom_server                         # Phantom server settings
+  splunk_server        = var.splunk_server                          
+  phantom_server       = var.phantom_server                   
 }
 
+# NGINX Server module to deploy and manage an NGINX server.
 module "nginx_server" {
   source               = "./modules/nginx-server"
 
   # Network configuration (GCP equivalent of VPC and subnet IDs)
-  vpc_network          = module.networkModule.vpc_network_id      # Reference the network module’s VPC network
-  subnetwork           = module.networkModule.vpc_public_subnet_id  # Reference the network module’s subnet
+  vpc_network          = module.networkModule.vpc_network_id  
+  subnetwork           = module.networkModule.vpc_public_subnet_id 
   cidrs                = var.cidrs
 
   # General configuration
   general              = var.general
   gcp                  = var.gcp
-  
+  service_accounts     = var.service_accounts
+  nginx_sa_email       = module.iam.service_account_emails["nginx"]
+  nginx_sa_roles       = module.iam.assigned_roles["nginx"]
+
   # Server instances and dependencies
   splunk_server        = var.splunk_server
   nginx_server         = var.nginx_server
 }
 
+# Kali Server module to deploy Kali Linux for security assessments and network tests.
 module "kali-server" {
-  source               = "./modules/kali-server"
-  vpc_network          = module.networkModule.vpc_network_id      # Reference the network module’s VPC network
-  subnetwork           = module.networkModule.vpc_public_subnet_id  # Reference the network module’s subnet
-  cidrs                = var.cidrs
-  general              = var.general
-  kali_server          = var.kali_server
-  gcp                  = var.gcp
+  source              = "./modules/kali-server"
+  vpc_network         = module.networkModule.vpc_network_id 
+  subnetwork          = module.networkModule.vpc_public_subnet_id 
+  cidrs               = var.cidrs
+  general             = var.general
+  kali_server         = var.kali_server
+  gcp                 = var.gcp
+  service_accounts    = var.service_accounts
+  kali_sa_email       = module.iam.service_account_emails["kali"]
+  kali_sa_roles       = module.iam.assigned_roles["kali"]
 }
 
-
+# Linux Server module to deploy and configure Linux servers.
 module "linux_server" {
-  source               = "./modules/linux-server"
+  source                = "./modules/linux-server"
 
   # Network configuration (GCP equivalent of VPC and subnet IDs)
-  vpc_network          = module.networkModule.vpc_network_id
-  subnetwork           = module.networkModule.vpc_public_subnet_id
-  cidrs                = var.cidrs 
+  vpc_network           = module.networkModule.vpc_network_id
+  subnetwork            = module.networkModule.vpc_public_subnet_id
+  cidrs                 = var.cidrs 
 
   # General configuration
-  general              = var.general
-  gcp                  = var.gcp
+  general               = var.general
+  gcp                   = var.gcp
+  service_accounts      = var.service_accounts
+  linux_sa_email        = module.iam.service_account_emails["linux"]
+  linux_sa_roles        = module.iam.assigned_roles["linux"]
   
   # Server instances and dependencies
-  splunk_server        = var.splunk_server
-  snort_server         = var.snort_server
-  zeek_server          = var.zeek_server
-  linux_servers        = var.linux_servers
+  splunk_server         = var.splunk_server
+  snort_server          = var.snort_server
+  zeek_server           = var.zeek_server
+  linux_servers         = var.linux_servers
 
-  simulation           = var.simulation
+  simulation            = var.simulation
 }
 
+# Windows Server module to deploy and configure Windows servers.
 module "windows_server" {
-  source               = "./modules/windows-server"
+  source                  = "./modules/windows-server"
 
   # Network configuration (GCP equivalent of VPC and subnet IDs)
-  vpc_network          = module.networkModule.vpc_network_id       # GCP VPC network
-  subnetwork           = module.networkModule.vpc_public_subnet_id # GCP subnet
+  vpc_network             = module.networkModule.vpc_network_id 
+  subnetwork              = module.networkModule.vpc_public_subnet_id
   
   # General configuration
-  general              = var.general                               # General configuration
-  gcp                  = var.gcp                                   # GCP project configuration
+  general                 = var.general
+  gcp                     = var.gcp
+  service_accounts        = var.service_accounts
+  windows_sa_email        = module.iam.service_account_emails["windows"]
+  windows_sa_roles        = module.iam.assigned_roles["windows"]
   
   # Server instances and dependencies
-  splunk_server        = var.splunk_server                         # Splunk server configuration
-  snort_server         = var.snort_server                          # Snort server configuration
-  zeek_server          = var.zeek_server                           # Zeek server configuration
-  windows_servers      = var.windows_servers                       # Windows server configuration (list of instances)
+  splunk_server           = var.splunk_server
+  snort_server            = var.snort_server
+  zeek_server             = var.zeek_server
+  windows_servers         = var.windows_servers
 
-  simulation           = var.simulation                            # Simulation configuration if needed
+  simulation              = var.simulation 
 }
 
+# Snort Server module to deploy a Snort instance for network intrusion detection.
 module "snort_server" {
   source = "./modules/snort-server"
 
   # Network configuration (GCP equivalent of VPC and subnet IDs)
-  vpc_network          = module.networkModule.vpc_network_id     # Replace with the output for VPC network name from network module
-  subnetwork           = module.networkModule.vpc_public_subnet_id # Replace with the output for subnet name from network module
+  vpc_network          = module.networkModule.vpc_network_id
+  subnetwork           = module.networkModule.vpc_public_subnet_id
   cidrs                = var.cidrs
 
   # General configuration
   general              = var.general
-  gcp                  = var.gcp  # GCP-specific configuration (instead of `aws`)
+  gcp                  = var.gcp
+  service_accounts     = var.service_accounts
+  snort_sa_email       = module.iam.service_account_emails["snort"]
+  snort_sa_roles       = module.iam.assigned_roles["snort"]
   
   # Server instances and dependencies
   splunk_server            = var.splunk_server
@@ -135,29 +167,33 @@ module "snort_server" {
   linux_server_instances   = module.linux_server.linux_server_instance_ids
 }
 
+# Zeek Server module to deploy and configure Zeek for network monitoring.
 module "zeek_server" {
   source                          = "./modules/zeek-server"
 
   # Network configuration (GCP equivalent of VPC and subnet IDs)
-  vpc_network                     = module.networkModule.vpc_network_id                 # GCP VPC network name
-  subnetwork                      = module.networkModule.vpc_public_subnet_id           # GCP subnet name
-  cidrs                           = var.cidrs                                           # CIDR blocks for the network
+  vpc_network                     = module.networkModule.vpc_network_id  
+  subnetwork                      = module.networkModule.vpc_public_subnet_id 
+  cidrs                           = var.cidrs 
 
   # General configuration
-  general                         = var.general                                         # General configuration
-  gcp                             = var.gcp                                             # GCP project configuration
+  general                         = var.general
+  gcp                             = var.gcp
+  service_accounts                = var.service_accounts
+  zeek_sa_email                   = module.iam.service_account_emails["zeek"]
+  zeek_sa_roles                   = module.iam.assigned_roles["zeek"]
   
   # Server instances and dependencies
-  splunk_server                   = var.splunk_server                                   # Splunk server configurations
-  snort_server                    = var.snort_server                                    # Snort server configurations
-  zeek_server                     = var.zeek_server                                     # Zeek server configurations (instance type, image, etc.)
-  windows_servers                 = var.windows_servers                                 # List of Windows servers for packet mirroring
-  windows_server_instances        = module.windows_server.windows_server_instance_ids   # Reference to Windows server instances
-  linux_servers                   = var.linux_servers                                   # List of Linux servers for packet mirroring
-  linux_server_instances          = module.linux_server.linux_server_instance_ids       # Reference to Linux server instances
+  splunk_server                   = var.splunk_server
+  snort_server                    = var.snort_server
+  zeek_server                     = var.zeek_server
+  windows_servers                 = var.windows_servers
+  windows_server_instances        = module.windows_server.windows_server_instance_ids 
+  linux_servers                   = var.linux_servers
+  linux_server_instances          = module.linux_server.linux_server_instance_ids
   
   # 
-  snort_sensor_self_links         = module.snort_server.snort_server_self_links         # Snort sensor self links
-  snort_forwarding_rule_self_link = module.snort_server.snort_forwarding_rule_self_link # Snort forwarding rule self link
-  snort_backend_service_self_link = module.snort_server.snort_backend_service_self_link # Snort backend service self link
+  snort_sensor_self_links         = module.snort_server.snort_server_self_links
+  snort_forwarding_rule_self_link = module.snort_server.snort_forwarding_rule_self_link
+  snort_backend_service_self_link = module.snort_server.snort_backend_service_self_link
 }

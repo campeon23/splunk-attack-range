@@ -11,6 +11,12 @@ resource "google_compute_instance" "splunk_server" {
     machine_type = var.splunk_server.machine_type
     zone         = var.gcp.zone
 
+    # Assign the Splunk Service Account to this instance
+    service_account {
+        email  = var.splunk_sa_email
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
+
     # SSH Metadata Configuration
     metadata = {
         ssh-keys = "ubuntu:${file(var.gcp.public_key_path)}"  # Ensure the path points to your SSH public key file

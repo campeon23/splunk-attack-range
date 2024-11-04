@@ -33,6 +33,12 @@ resource "google_compute_instance" "phantom_server" {
     }
   }
 
+  # Assign the Phantom Service Account to this instance
+    service_account {
+        email  = var.phantom_sa_email
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
+
   # Metadata for SSH access setup
   metadata = {
     ssh-keys = "root:${file(var.gcp.public_key_path)}"  # Public key for SSH access
@@ -55,7 +61,7 @@ resource "google_compute_instance" "phantom_server" {
 
       # Ensure authorized_keys file exists with correct permissions
       "touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys",
-      
+
       # Append the public key only if it doesn’t already exist in authorized_keys
       "grep -qxF \"$(cat ${file(var.gcp.public_key_path)})\" /root/.ssh/authorized_keys || echo $(cat ${file(var.gcp.public_key_path)}) >> /root/.ssh/authorized_keys"
     ]  

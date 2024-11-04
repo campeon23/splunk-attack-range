@@ -33,6 +33,12 @@ resource "google_compute_instance" "nginx_server" {
     }
   }
 
+  # Assign the NGINX Service Account to this instance
+    service_account {
+        email  = var.nginx_sa_email
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
+
   # Metadata for SSH and Custom Commands
   # Adds SSH key metadata for instance access
   metadata = {

@@ -8,6 +8,12 @@ variable "vpc_network" { }
 
 variable "subnetwork" { }
 
+variable "service_accounts" { }
+
+variable "snort_sa_email" { }
+
+variable "snort_sa_roles" { }
+
 variable "snort_server" { }
 
 variable "linux_servers" { }

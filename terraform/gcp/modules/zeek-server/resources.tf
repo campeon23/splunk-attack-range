@@ -33,6 +33,12 @@ resource "google_compute_instance" "zeek_sensor" {
     }
   }
 
+  # Assign the Zeek Service Account to this instance
+    service_account {
+        email  = var.zeek_sa_email
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
+
   # SSH key metadata for access
   metadata = {
     ssh-keys = "ubuntu:${file(var.gcp.public_key_path)}"
@@ -64,7 +70,8 @@ resource "google_compute_instance" "zeek_sensor" {
       {
         "ansible_python_interpreter": "/usr/bin/python3",
         "general": ${jsonencode(var.general)},
-        "splunk_server": ${jsonencode(var.splunk_server)}
+        "splunk_server": ${jsonencode(var.splunk_server)},
+        "zeek_server": ${jsonencode(var.zeek_server)}
       }
       EOF
     EOT
@@ -98,7 +105,7 @@ resource "google_compute_packet_mirroring" "zeek_packet_mirroring" {
 
   mirrored_resources {
     instances {
-        url = var.snort_sensor_self_links[0]  # Link to the instance to mirror traffic from
+        url = google_compute_instance.zeek_sensor[0].self_link  # Link to the instance to mirror traffic from
     }
   }
 
@@ -109,7 +116,7 @@ resource "google_compute_packet_mirroring" "zeek_packet_mirroring" {
   }
 
   collector_ilb {
-    url = var.snort_forwarding_rule_self_link  # Link to packet mirroring collector
+    url = google_compute_forwarding_rule.zeek_forwarding_rule.self_link  # Link to packet mirroring collector
   }
 }
 

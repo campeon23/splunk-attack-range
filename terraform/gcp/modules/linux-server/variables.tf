@@ -8,6 +8,12 @@ variable "vpc_network" { }
 
 variable "subnetwork" { }
 
+variable "service_accounts" { }
+
+variable "linux_sa_email" { }
+
+variable "linux_sa_roles" { }
+
 variable "simulation" { }
 
 variable "linux_servers" { }
